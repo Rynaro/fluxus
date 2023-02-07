@@ -63,7 +63,7 @@ module Fluxus
       def test_on_failure_chainable_broader_scope
         result = Failure.new(type: :miscalculated, data: { sum: -1 })
 
-        result.on_failure { |data| assert_equal -1, data[:sum] }
+        result.on_failure { |data| assert_equal(-1, data[:sum]) }
       end
 
       def test_on_success_multiple_chains_with_scoped_return

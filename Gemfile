@@ -3,7 +3,14 @@
 source 'https://rubygems.org'
 
 gem 'rake', '~> 13.0'
-gem 'rubocop', '~> 1.21'
+
+group :development, :test do
+  gem 'rubocop', '~> 1.21'
+
+  gem 'byebug', '~>  11'
+  gem 'pry', '~> 0.14'
+  gem 'pry-byebug', '~> 3.10'
+end
 
 group :test do
   gem 'minitest', '~> 5'
