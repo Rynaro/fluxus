@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'bundler/setup'
+require 'fluxus'
+
+# You can add fixtures and/or initialization code here to make experimenting
+# with your gem easier. You can also use a different console, if you like.
+
+# (If you use this, don't forget to add pry to your Gemfile!)
+# require "pry"
+# Pry.start
+
+class Calculator < Fluxus::Case
+  def call!(no1, no2)
+    raise NoMethodError, 'how error' if no2 == -1
+    return no1 if no1 == -1
+    return Failure(result: no1 - no2) if no2 > no1
+
+    Success(result: no1 + no2)
+  end
+end
+
+class SafeCalculator < Fluxus::Safe::Case
+  def call!(no1, no2)
+    raise NoMethodError, 'how error' if no2 == -1
+    return no1 if no1 == -1
+    return Failure(result: no1 - no2) if no2 > no1
+
+    Success(result: no1 + no2)
+  end
+end
+
+require 'irb'
+IRB.start(__FILE__)
