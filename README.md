@@ -1,5 +1,9 @@
 # Fluxus
 
+[![build](https://github.com/Rynaro/fluxus/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Rynaro/fluxus/actions/workflows/ci.yml)
+[![Maintainability](https://api.codeclimate.com/v1/badges/e86034a1a2fdc1e8e88b/maintainability)](https://codeclimate.com/github/Rynaro/fluxus/maintainability)
+
+
 Fluxus [[ˈfluːk.sus]](https://en.wiktionary.org/wiki/fluxus#Latin) is a simple way to bring use cases to your code. The library uses what Ruby can provide and a little taste of pure object-oriented concepts.
 
 _This library takes inspiration from the Clean Architecture concepts of use cases._
