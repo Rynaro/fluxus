@@ -61,7 +61,7 @@ This approach could be useful for some error recovery systems. Since the applica
 
 ---
 
-### The return `Flow::Results`
+### The return `Fluxus::Results`
 
 The expected `Fluxus` contract expects a `Fluxus::Results::Result` interface compatible as a return value.
 
