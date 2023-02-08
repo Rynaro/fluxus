@@ -1,5 +1,6 @@
 # Fluxus
 
+[![Gem Version](https://badge.fury.io/rb/fluxus.svg)](https://badge.fury.io/rb/fluxus)
 [![build](https://github.com/Rynaro/fluxus/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Rynaro/fluxus/actions/workflows/ci.yml)
 [![Maintainability](https://api.codeclimate.com/v1/badges/e86034a1a2fdc1e8e88b/maintainability)](https://codeclimate.com/github/Rynaro/fluxus/maintainability)
 
