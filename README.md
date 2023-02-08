@@ -12,7 +12,7 @@ _Some similarities with [dry-monads](https://github.com/dry-rb/dry-monads) and [
 
 ## Installation
 
-You can add as your project as a dependency:
+You can add it to your project as a dependency:
 
 ```ruby
 gem 'fluxus'
