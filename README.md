@@ -2,9 +2,9 @@
 
 Fluxus [[ˈfluːk.sus]](https://en.wiktionary.org/wiki/fluxus#Latin) is a simple way to bring use cases to your code. The library uses what Ruby can provide and a little taste of pure object-oriented concepts.
 
-_This library takes inspiration from the Clean Architecture concepts of use cases.
+_This library takes inspiration from the Clean Architecture concepts of use cases._
 
-Some similarities with [dry-monads](https://github.com/dry-rb/dry-monads) and [u-case](https://github.com/serradura/u-case) can easily be perceived. This library operates to bring interoperability with them._
+_Some similarities with [dry-monads](https://github.com/dry-rb/dry-monads) and [u-case](https://github.com/serradura/u-case) can easily be perceived. This library operates to bring interoperability with them._
 
 ## Installation
 
