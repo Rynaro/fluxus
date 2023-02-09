@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    fluxus (0.1.1)
+    fluxus (0.1.2)
 
 GEM
   remote: https://rubygems.org/
