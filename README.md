@@ -9,8 +9,6 @@ Fluxus [[ˈfluːk.sus]](https://en.wiktionary.org/wiki/fluxus#Latin) is a simple
 
 _This library takes inspiration from the Clean Architecture concepts of use cases._
 
-_Some similarities with [dry-monads](https://github.com/dry-rb/dry-monads) and [u-case](https://github.com/serradura/u-case) can easily be perceived. This library operates to bring interoperability with them._
-
 ## Installation
 
 You can add it to your project as a dependency:
