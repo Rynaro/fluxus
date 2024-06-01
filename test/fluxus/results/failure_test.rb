@@ -6,6 +6,7 @@ module Fluxus
   module Results
     class FailureTest < Minitest::Test
       class ReallySpecificError < StandardError; end
+      class EmptyCaller < ::Fluxus::Safe::Caller; end
 
       def test_default_instance_creation
         result = Failure.new
@@ -48,6 +49,7 @@ module Fluxus
       def test_result_implement_chainable_public_contract
         result = Failure.new
 
+        assert result.respond_to?(:then)
         assert result.respond_to?(:on_success)
         assert result.respond_to?(:on_failure)
         assert result.respond_to?(:on_exception)
@@ -111,6 +113,14 @@ module Fluxus
         result
           .on_failure(:miscalculated) { raise }
           .on_exception(ReallySpecificError) { |data| assert_equal 'i failed :(', data.message }
+      end
+
+      def test_chainable_then_caller_suppressed_call_by_failure
+        result = Failure.new(type: :miscalculation, data: 2)
+
+        result
+          .then(EmptyCaller)
+          .on_success { raise }
       end
     end
   end

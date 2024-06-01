@@ -3,6 +3,13 @@
 module Fluxus
   module Results
     module Chainable
+      def then(klass, **kwargs)
+        return self if failure?
+
+        data ||= {}
+        klass.call!(**data.merge(kwargs))
+      end
+
       def on_success(expected_type = nil)
         yield(data) if __success_type?(expected_type)
         self

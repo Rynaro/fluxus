@@ -5,6 +5,15 @@ require 'test_helper'
 module Fluxus
   module Results
     class SuccessTest < Minitest::Test
+      class CheckEven < ::Fluxus::Safe::Caller
+        def call!(number:)
+          return false if number.is_a?(String)
+          return Failure(type: :odd, result: "#{number} is odd") if number.odd?
+
+          Success(type: :even, result: "#{number} is even")
+        end
+      end
+
       def test_default_instance_creation
         result = Success.new
 
@@ -46,6 +55,7 @@ module Fluxus
       def test_result_implement_chainable_public_contract
         result = Success.new
 
+        assert result.respond_to?(:then)
         assert result.respond_to?(:on_success)
         assert result.respond_to?(:on_failure)
         assert result.respond_to?(:on_exception)
@@ -93,6 +103,16 @@ module Fluxus
           .on_failure { raise }
           .on_success(:skipped) { raise }
           .on_success(:calculated) { |data| assert_equal 2, data[:sum] }
+      end
+
+      def test_chainable_then_caller_runtime_by_success
+        result = Success.new(type: :calculated, data: 2)
+
+        result
+          .on_failure { raise }
+          .on_success(:skipped) { raise }
+          .then(CheckEven)
+          .on_success { |data| assert_equal '2 is even', data }
       end
     end
   end
