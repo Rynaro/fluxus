@@ -6,8 +6,8 @@ module Fluxus
       def then(klass, **kwargs)
         return self if failure?
 
-        data ||= {}
-        klass.call!(**data.merge(kwargs))
+        result_data = self.data.is_a?(Hash) ? self.data : { result: self.data }
+        klass.call!(**result_data.merge(kwargs))
       end
 
       def on_success(expected_type = nil)
