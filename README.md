@@ -4,232 +4,217 @@
 [![build](https://github.com/Rynaro/fluxus/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Rynaro/fluxus/actions/workflows/ci.yml)
 [![Maintainability](https://api.codeclimate.com/v1/badges/e86034a1a2fdc1e8e88b/maintainability)](https://codeclimate.com/github/Rynaro/fluxus/maintainability)
 
-
-Fluxus [[ˈfluːk.sus]](https://en.wiktionary.org/wiki/fluxus#Latin) is a simple way to bring use cases to your code. The library uses what Ruby can provide and a little taste of pure object-oriented concepts.
+Fluxus [[ˈfluːk.sus]](https://en.wiktionary.org/wiki/fluxus#Latin) is a lightweight, dependencyless library that brings use cases into your Ruby applications. The library leverages Ruby's best features alongside pure object-oriented concepts to create expressive and maintainable code.
 
 _This library takes inspiration from the Clean Architecture concepts of use cases._
 
 ## Installation
 
-You can add it to your project as a dependency:
+Add it to your project as a dependency:
 
 ```ruby
 gem 'fluxus'
 ```
 
-## Usage
-
-An use case is a set of business instructions that will be carefully followed by the runtime code and its dependencies to achieve a great purpose. The level of complexity can vary, but _Fluxus_ is here to create readability and scope around it!
-
-_Fluxus_ always tries to deliver more from an object-oriented paradigm than from showing itself. This means _Fluxus_ is more about directions than dependency. And that's why we call our definition classes as `Fluxus::Object` and `Fluxus::SafeObject`.
-
-### Creating a basic Fluxus::Object
+Or install it directly:
 
 ```ruby
-class IsEven < Fluxus::Object
-    def call!(number)
-        return Failure(result: "#{number} is odd") if number.odd?
+gem install fluxus
+```
 
-        Success(result: "#{number} is even")
-    end
+## Why Fluxus?
+
+A use case represents a set of business rules that your application follows to achieve a specific goal. Fluxus provides a minimal structure to organize these rules while keeping your code clean and maintainable.
+
+Fluxus is designed to be:
+
+- **Simple**: Minimal API with a straightforward mental model
+- **Expressive**: Clear and explicit interfaces for all operations
+- **Predictable**: Consistent behavior with strong guarantees
+- **Chainable**: Compose multiple use cases together elegantly
+
+## Core Concepts
+
+Fluxus follows two main principles:
+
+1. **Explicit Success/Failure**: Every use case explicitly returns a `Success` or `Failure` result
+2. **Chainable Actions**: Results can be chained to build clean, sequential processing pipelines
+
+## Getting Started
+
+### Creating a Basic Use Case
+
+Use `Fluxus::Object` for standard use cases:
+
+```ruby
+class VerifyCredentials < Fluxus::Object
+  def call!(username:, password:)
+    user = User.find_by(username: username)
+
+    return Failure(type: :not_found, result: "User not found") unless user
+    return Failure(type: :invalid_password, result: "Invalid password") unless user.valid_password?(password)
+
+    Success(result: user)
+  end
 end
 
-IsEven.call!(2)
+# Using the use case
+VerifyCredentials
+  .call!(username: "john", password: "secret123")
+  .on_success { |user| log_in(user) }
+  .on_failure(:not_found) { |error| show_error(error) }
+  .on_failure(:invalid_password) { |error| show_error(error) }
 ```
 
-### Creating a basic Fluxus::SafeObject
+### Error-Safe Use Cases
+
+For use cases where you want automatic error handling, use `Fluxus::SafeObject`:
 
 ```ruby
-class IsEven < Fluxus::SafeObject
-    def call!(number)
-        return Failure(result: "#{number} is odd") if number.odd?
+class FetchUserData < Fluxus::SafeObject
+  def call!(user_id:)
+    user = User.find(user_id)
+    profile = ProfileService.fetch_profile(user)
 
-        Success(result: "#{number} is even")
-    end
+    Success(result: { user: user, profile: profile })
+  end
 end
 
-IsEven.call!(2)
+# Using the safe use case
+FetchUserData
+  .call!(user_id: 123)
+  .on_success { |data| render_profile(data) }
+  .on_failure { |error| show_error("Could not load profile") }
+  .on_exception(ActiveRecord::RecordNotFound) { |data| redirect_to_not_found }
 ```
 
-#### Differences of `Object` and `SafeObject`
+With `SafeObject`, any unhandled exceptions are automatically captured and returned as a `Failure` result with type `:exception`.
 
-While `Fluxus::Object` preserves the actual Ruby code autonomy to dictate the flow breakers like error management. `SafeObject` stays in the middle and defines safe positions by respecting the `Fluxus` contract and delivering the `Fluxus::Results::Result` interface.
+## Result Objects
 
-This approach could be useful for some error recovery systems. Since the application will always recover from it by using the error as a dependency not a runtime flow control.
+Every use case returns a result object that follows the `Fluxus::Results::Result` contract:
 
-
----
-
-### The return `Fluxus::Results`
-
-The expected `Fluxus` contract expects a `Fluxus::Results::Result` interface compatible as a return value.
-
-While `Object` (and `SafeObject`) are responsible for delivering a place to hold the actual logic and control this code runtime. The `Results::Result` contract will be responsible for delivering back the necessary hooks and their processed data to the application.
-
-We natively support two kinds of `Fluxus::Results::Result` the `Success` and `Failure`. Using this idiom is closer to the natural conception of use cases, when they fail or are successful.
-
-#### Success
+### Success
 
 ```ruby
-Success(result: true)
-Success(type: :shinning, result: true)
+Success(result: user)                                 # Basic success
+Success(type: :created, result: { id: user.id })      # Typed success
 ```
 
-#### Failure
+### Failure
 
 ```ruby
-Failure(result: false)
-Failure(type: :dusty, result: false)
-
+Failure(result: "Invalid input")                      # Basic failure
+Failure(type: :validation, result: errors.full_messages) # Typed failure
 ```
 
-#### The `Fluxus::Results::Result` contract
+### Result Contract
 
-All results share the same (abstract) ancestor definitions which mean they are interchangeable. This brings more coherence in your code when you are handling the most crucial part of the flow, their results.
-
-The `Success` and `Failure` public contracts could be defined by
+All result objects expose the same core methods:
 
 ```ruby
-success_object = Success(type: :ok, result: 1+1)
+result = Success(type: :created, result: user)
 
-success_object.success? # => true
-success_object.failure? # => false
-success_object.unknown? # => false
+result.success?  # => true
+result.failure?  # => false
+result.unknown?  # => false
 
-success_object.type # => :ok
-success_object.data # => 2
-
-failure_object = Failure(type: :fail, result: 1-1)
-
-failure_object.success? # => false
-failure_object.failure? # => true
-failure_object.unknown? # => false
-
-failure_object.type # => :fail
-failure_object.data # => 0
-
+result.type      # => :created
+result.data      # => user object
 ```
 
-#### The `result` and `data` relationship
+## Chainable Hooks
 
-You already noticed the `Success` and `Failure` receiving `result:` but getting the data from `data`. In fact, inside the `Fluxus::Results::Result,` the actual contract handles `data` directly. But `result` is a wrapper defined by `Fluxus` to bring more meaning inside the use case concept.
-
-#### The `type` importance
-
-The `type` is a way to categorize the major events inside the use case. Your use case can hold a variety of `Success` and `Failure` and depend on how the business is defined different paths are taken.
-
-The `Fluxus` also defines a default value to bring simplicity to small use cases. The default value is `:ok` for `Success` and `:error` for `Failure`.
-
-Prefer using `symbols` for handling those types.
-
-#### Results are chainable
-
-Was described that `Fluxus::Results::Result` are responsible for handling the (obviously) result. This means, this also needs to control the post-use case without leaking data to the runtime void.
-
-With this in mind, the Result implements **chainable** methods. You can call them hooks if you wish.
-
-Each hook represents one of the expected states.
+Results can be chained to add conditional behavior:
 
 ```ruby
-Fluxus::Results::Result#on_success
-Fluxus::Results::Result#on_failure
-Fluxus::Results::Result#on_exception
+CreateUser
+  .call!(params: user_params)
+  .on_success { |user| redirect_to(user_path(user)) }
+  .on_success(:created) { |user| NotificationService.user_created(user) }
+  .on_failure(:validation) { |errors| render :new, status: :unprocessable_entity }
+  .on_failure { |_| render :error, status: :internal_server_error }
 ```
 
-The `on_exception` is a contract for `SafeObject`, but they are basically a `Failure` with a specialized eye for `Exception` looking.
-
-#### Hooks are blocks
-
-All hooks are essentially blocks, and `data` is available there. This means, you can define the code routine that will handle the `data`, and `data` is immutable. Each hook handles its own version of `data`, and this belongs there.
-
-#### Hooks respect `self`
-
-All hook implementation preserves the `Success` or `Failure` instance. And this brings a powerful feature to your pipeline. Use cases can chain various conclusions.
-
-
-
----
-
-## Compiling the knowledge
-
-Using the `IsEven` simple use case, let's implement a fully covered `Fluxus::Object`, so you can fully understand how to build your own use cases.
-
-### Basic flow
+Type-specific hooks only run when the result matches the specified type:
 
 ```ruby
-class IsEven < Fluxus::Object
-    def call!(number)
-        return Failure(result: "#{number} is odd") if number.odd?
+ProcessPayment
+  .call!(amount: 100, user: current_user)
+  .on_success(:paid) { |receipt| send_receipt(receipt) }
+  .on_success(:pending) { |transaction| schedule_verification(transaction) }
+  .on_failure(:insufficient_funds) { |_| redirect_to_add_funds }
+  .on_failure(:card_declined) { |error| show_card_error(error) }
+```
 
-        Success(result: "#{number} is even")
-    end
+### Safe Exception Handling
+
+When using `SafeObject`, you can handle specific exceptions:
+
+```ruby
+ImportData
+  .call!(file: params[:file])
+  .on_success { |results| flash[:notice] = "Imported #{results[:count]} records" }
+  .on_exception(CSV::MalformedCSVError) { |_| flash[:error] = "Invalid CSV format" }
+  .on_exception { |data| Bugsnag.notify(data[:exception]) }
+```
+
+## Chaining Use Cases
+
+You can chain multiple use cases together using the `then` method:
+
+```ruby
+VerifyCredentials
+  .call!(username: params[:username], password: params[:password])
+  .then(GenerateAuthToken, expires_in: 24.hours)
+  .then(LogLogin, ip: request.remote_ip)
+  .on_success { |auth_token| cookies[:token] = auth_token }
+  .on_failure { |error| render json: { error: error }, status: :unauthorized }
+```
+
+The `then` method passes the result data from the previous use case as arguments to the next one, merging any additional arguments you provide. This works differently based on the return type:
+
+- If the result data is a hash, it's merged with any additional arguments
+- If the result data is not a hash, it's passed as `result: data` to the next use case
+
+## Advanced Usage
+
+### Composing Complex Workflows
+
+```ruby
+def process_order(params)
+  ValidateOrderParams
+    .call!(params: params)
+    .then(ReserveInventory)
+    .then(ProcessPayment)
+    .then(CreateShipment)
+    .on_success { |shipment| OrderMailer.confirmation(shipment).deliver_later }
+    .on_failure(:payment_declined) { |error| notify_customer(error) }
+    .on_failure(:inventory_unavailable) { |items| suggest_alternatives(items) }
+    .on_failure { |error| log_order_failure(error) }
 end
-
-def my_use_case(number)
-    IsEven
-        .call!(number)
-        .on_success { |data| puts data << '!' }
-        .on_failure { |data| puts 'Why? ' << data }
-end
-
-my_use_case(2) #=> 2 is even!
-my_use_case(3) #=> Why? 3 is odd
-my_use_case(nil) #=> NoMethodError
 ```
 
-### Scoped Results flow
+### Using with Rails
+
+Fluxus works great with Rails controllers:
 
 ```ruby
-class IsEven < Fluxus::Object
-    def call!(number)
-        return Failure(type: :zero, result: 'you got zero') if number.zero?
-        return Failure(type: :odd, result: "#{number} is odd") if number.odd?
+class UsersController < ApplicationController
+  def create
+    CreateUser
+      .call!(params: user_params)
+      .on_success { |user| redirect_to user_path(user), notice: "User created!" }
+      .on_failure { |errors| render :new, locals: { errors: errors } }
+  end
 
-        Success(type: :even, result: "#{number} is even")
-    end
+  private
+
+  def user_params
+    params.require(:user).permit(:name, :email, :password)
+  end
 end
-
-def my_use_case(number)
-    IsEven
-        .call!(number)
-        .on_success(:even) { |data| p data << '!' }
-        .on_failure(:odd) { |data| p 'Why? ' << data }
-        .on_failure(:zero) { |data| p data }
-end
-
-my_use_case(0) #=> you got zero
-my_use_case(2) #=> 2 is even!
-my_use_case(3) #=> Why? 3 is odd
-my_use_case(nil) #=> NoMethodError
 ```
-
-### Safe Results flow
-
-```ruby
-class IsEven < Fluxus::SafeObject
-    def call!(number)
-        return Failure(type: :zero, result: 'you got zero') if number.zero?
-        return Failure(type: :odd, result: "#{number} is odd") if number.odd?
-
-        Success(type: :even, result: "#{number} is even")
-    end
-end
-
-def my_use_case(number)
-    IsEven
-        .call!(number)
-        .on_success(:even) { |data| p data << '!' }
-        .on_failure(:odd) { |data| p 'Why? ' << data }
-        .on_failure(:zero) { |data| p data }
-        .on_exception(NoMethodError) { |data| p  }
-end
-
-my_use_case(0) #=> you got zero
-my_use_case(2) #=> 2 is even!
-my_use_case(3) #=> Why? 3 is odd
-my_use_case(nil) #=> Failure with exception: data
-```
-
 
 ## Contributing
 
